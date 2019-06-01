@@ -7,10 +7,13 @@ Subproject tool
 
 Helps you have standalone environment for each subproject(subdirectory)
 
-Usage::
+Usage:
+		def options(opt):
+			opt.load('subproject')
+
 		def configure(conf):
 			conf.add_subproject('folder1 folder2')
-		
+
 		def build(bld):
 			bld.add_subproject('folder1 folder2')
 '''
@@ -22,19 +25,20 @@ DEPTH = ''
 
 def depth_push(path):
 	global DEPTH
-	
+
 	DEPTH = os.path.join(DEPTH, path)
 	# print DEPTH
 
 def depth_pop():
 	global DEPTH
-	
+
 	DEPTH = os.path.dirname(DEPTH)
 	# print DEPTH
 
-def depth():
+def get_name_by_depth():
 	global DEPTH
-	return DEPTH
+
+	return DEPTH.replace(os.sep, '_')
 
 def opt(f):
 	"""
@@ -49,12 +53,12 @@ def opt(f):
 @opt
 def add_subproject(ctx, names):
 	names_lst = Utils.to_list(names)
-	
+
 	for name in names_lst:
 		depth_push(name)
-	
-		wscript_path = os.path.join(depth(), 'wscript')
-	
+
+		wscript_path = os.path.join(DEPTH, 'wscript')
+
 		if not os.path.isfile(wscript_path):
 			# HACKHACK: this way we get warning message right in the help
 			# so this just becomes more noticeable
@@ -66,8 +70,8 @@ def add_subproject(ctx, names):
 
 def options(opt):
 	grp = opt.add_option_group('Subproject options')
-	
-	grp.add_option('-S', '--skip-subprojects', action='store', dest = 'SKIP_SUBDIRS', default=None, 
+
+	grp.add_option('-S', '--skip-subprojects', action='store', dest = 'SKIP_SUBDIRS', default=None,
 		help = 'don\'t recurse into specified subprojects. Use only directory name.')
 
 def get_subproject_env(ctx, path, log=False):
@@ -90,28 +94,26 @@ def get_subproject_env(ctx, path, log=False):
 	if log: Logs.pprint('YELLOW', 'env: changed to default env')
 	raise IndexError('top env')
 
-
-def configure(conf):
-	if conf.options.SKIP_SUBDIRS:
-		conf.env.IGNORED_SUBDIRS = conf.options.SKIP_SUBDIRS.split(',')
-
 @Configure.conf
 def add_subproject(ctx, names):
 	names_lst = Utils.to_list(names)
 
 	if isinstance(ctx, Configure.ConfigurationContext):
+		if not ctx.env.IGNORED_SUBDIRS and ctx.options.SKIP_SUBDIRS:
+			ctx.env.IGNORED_SUBDIRS = ctx.options.SKIP_SUBDIRS.split(',')
+
 		for name in names_lst:
 			depth_push(name)
 			if name in ctx.env.IGNORED_SUBDIRS:
-				ctx.msg(msg='--X %s' % depth(), result='ignored', color='YELLOW')
+				ctx.msg(msg='--X %s' % DEPTH, result='ignored', color='YELLOW')
 				depth_pop()
 				continue
 			saveenv = ctx.env
-			ctx.setenv(name, ctx.env) # derive new env from previous
+			ctx.setenv(get_name_by_depth(), ctx.env) # derive new env from previous
 			ctx.env.ENVNAME = name
-			ctx.msg(msg='--> %s' % depth(), result='in progress', color='BLUE')
+			ctx.msg(msg='--> %s' % DEPTH, result='in progress', color='BLUE')
 			ctx.recurse(name)
-			ctx.msg(msg='<-- %s' % depth(), result='done', color='BLUE')
+			ctx.msg(msg='<-- %s' % DEPTH, result='done', color='BLUE')
 			ctx.setenv('') # save env changes
 			ctx.env = saveenv # but use previous
 			depth_pop()
@@ -119,9 +121,12 @@ def add_subproject(ctx, names):
 		if not ctx.all_envs:
 			ctx.load_envs()
 		for name in names_lst:
+			depth_push(name)
 			if name in ctx.env.IGNORED_SUBDIRS:
+				depth_pop()
 				continue
 			saveenv = ctx.env
-			ctx.env = ctx.all_envs[name]
+			ctx.env = ctx.all_envs[get_name_by_depth()]
 			ctx.recurse(name)
 			ctx.env = saveenv
+			depth_pop()

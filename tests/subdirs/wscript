@@ -1,0 +1,21 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# a1batross, 2019
+
+def options(opt):
+	opt.add_subproject('foo')
+
+def configure(conf):
+	conf.env.SUBDIRS_ROOT = 'meow'
+	conf.add_subproject('foo')
+
+	# check that we're still using our enviroment
+	if 'SUBDIRS_FOO' in conf.env:
+		raise Exception('TEST FAILED')
+
+def build(bld):
+	bld.add_subproject('foo')
+
+	# check that 'foo' env isn't derived
+	if 'SUBDIRS_FOO' in bld.env:
+		raise Exception('TEST FAILED')
