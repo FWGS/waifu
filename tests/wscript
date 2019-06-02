@@ -2,14 +2,13 @@
 # encoding: utf-8
 # a1batross, 2019
 
+TESTS = 'subdirs gitversion conan'
+
 def options(opt):
-	opt.add_subproject('subdirs')
-	pass
+	opt.add_subproject(TESTS)
 
 def configure(conf):
-	conf.add_subproject('subdirs')
-	pass
+	conf.add_subproject(TESTS)
 
 def build(bld):
-	bld.add_subproject('subdirs')
-	pass
+	bld.add_subproject(TESTS)
