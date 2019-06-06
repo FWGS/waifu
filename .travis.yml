@@ -7,12 +7,9 @@ addons:
     packages:
       - build-essential
 python:
-  - "2.6"
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
+  - "2.7" # python2 never dies
+  - "3.4" # latest version that supports WinXP
+  - "3.7" # latest stable
 env:
   - TYPE="ext"
   - TYPE="noext"
