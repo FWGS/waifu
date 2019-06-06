@@ -1,4 +1,5 @@
-build/*
+build*/*
 .waf*
 .lock*
 *.pyc
+*.sln
