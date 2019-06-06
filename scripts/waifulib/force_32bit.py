@@ -11,7 +11,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from fwgslib import get_flags_by_compiler
+try: from fwgslib import get_flags_by_compiler
+except: from waflib.extras.fwgslib import get_flags_by_compiler
 
 # Input:
 #   BIT32_MANDATORY(optional) -- fail if 32bit mode not available

@@ -1,5 +1,5 @@
 # encoding: utf-8
-# fwgslib.py -- utils for Waf build system by FWGS
+# fwgslib.py -- utils for Waifu build system(Waf with extensions) by FWGS
 # Copyright (C) 2018 a1batross, Michel Mooij (michel.mooij
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 # GNU General Public License for more details.
 
 import os
-from waflib import Utils, Errors
+from waflib import Utils, Errors, Configure, Build
 
 def get_flags_by_compiler(flags, compiler):
 	'''Returns a list of compile flags, depending on compiler
@@ -46,6 +46,20 @@ def get_flags_by_type(flags, type, compiler):
 	if type in flags:
 		out += get_flags_by_compiler(flags[type], compiler)
 	return out
+
+def conf_get_flags_by_compiler(unused, flags, compiler):
+	return get_flags_by_compiler(flags, compiler)
+
+setattr(Configure.ConfigurationContext, 'get_flags_by_compiler', conf_get_flags_by_compiler)
+setattr(Build.BuildContext, 'get_flags_by_compiler', conf_get_flags_by_compiler)
+
+def conf_get_flags_by_type(unused, flags, type, compiler):
+	return get_flags_by_type(flags, type, compiler)
+
+setattr(Configure.ConfigurationContext, 'get_flags_by_type', conf_get_flags_by_type)
+setattr(Build.BuildContext, 'get_flags_by_type', conf_get_flags_by_type)
+
+
 
 def get_deps(bld, target):
 	'''Returns a list of (nested) targets on which this target depends.

@@ -106,8 +106,11 @@ from waflib import Utils, Logs, Errors, Context
 from waflib.Build import BuildContext
 # import waftools
 # from waftools import deps
-from fwgslib import get_targets
-from subproject import get_subproject_env
+try: from fwgslib import get_targets
+except: from waflib.extras.fwgslib import get_targets
+
+try: from subproject import get_subproject_env
+except from waflib.extras.subproject import get_subproject_env
 
 
 def options(opt):
