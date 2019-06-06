@@ -1,0 +1,20 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# a1batross, 2019
+
+VERSION = '1.0'
+APPNAME = 'waifu-tests'
+top = '.'
+
+def options(opt):
+	opt.add_option('--test-option', default=False, dest='TEST_OPTION', action='store_true')
+	opt.load('reconfigure')
+
+def configure(conf):
+	conf.load('reconfigure')
+
+	if not getattr(conf.options, 'TEST_OPTION', False):
+		raise Exception('TEST FAILED')
+
+def build(bld):
+	pass
