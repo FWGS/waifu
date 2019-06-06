@@ -17,4 +17,4 @@ env:
   - TYPE="ext"
   - TYPE="noext"
 script:
-  - ./run-tests.sh $TYPE
+  - bash run-tests.sh $TYPE
