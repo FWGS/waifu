@@ -110,7 +110,7 @@ try: from fwgslib import get_targets
 except: from waflib.extras.fwgslib import get_targets
 
 try: from subproject import get_subproject_env
-except from waflib.extras.subproject import get_subproject_env
+except: from waflib.extras.subproject import get_subproject_env
 
 
 def options(opt):
@@ -176,7 +176,7 @@ def export(bld):
 	if not bld.options.msdev and not hasattr(bld, 'msdev'):
 		return
 
-	Logs.pprint('RED', '''This tool is intended only to ease development for Windows-fags.
+	Logs.pprint('RED', '''This tool is intended only to ease development for Windows users!
 Don't use it for release builds, as it doesn't enables WinXP compatibility for now!''')
 
 	solution = MsDevSolution(bld)
