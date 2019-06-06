@@ -1,6 +1,6 @@
 # Waifu Build System
 
-This is a fork of Waf build system. It's not a complete build system, though.
+This is a Waf build system with some experimental modules developed for FWGS projects.
 
 This repo is focused on developing our own modules, testing them, syncing with upstream and maybe sending back patches to original Waf in future.
 
@@ -8,17 +8,21 @@ This repo is focused on developing our own modules, testing them, syncing with u
 
 We add some additional tools from original Waf extras and prelude to load waifulib is added.
 
-You can use `build-waf.sh` shell script(TODO: move to wscript) either prebuilt `waf` from this root repo
+To build use `build-waf.sh` shell script
 
 ## Running tests
 
-They are enabled by default. Just run:
 ```
-$ waf configure build
+$ sh run-tests.sh
 ```
 
 If it succeded, then tests are not failed.
 
 ## Using in your project
 
-Copy `scripts` and generated/prebuilt `waf` file to your project
+There is two prebuilt waf binaries, to those who don't want build by themselves.
+1) `waf-ext` as a prebuilt waf binary with some of our modules
+2) `waf-noext` as a prebuilt vanilla waf binary, only with line of code, to preload waifulib
+
+Then you need to create `scripts/waifulib` folder where you will place `waf` binary.
+Depending on your needs, copy modules from our `scripts/waifulib` folder to yours.
