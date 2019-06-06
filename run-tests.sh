@@ -9,8 +9,8 @@ die()
 ./build-waf.sh
 
 # install conan
-python -m pip install pip --upgrade --user
-pip install conan --user
+pip install pip --upgrade
+pip install conan
 
 # run tests
 python waf-$1 configure build msdev clean || die
