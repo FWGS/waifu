@@ -6,6 +6,8 @@ addons:
   apt:
     packages:
       - build-essential
+os: linux
+dist: xenial
 python:
   - "2.7" # python2 never dies
   - "3.4" # latest version that supports WinXP
