@@ -21,25 +21,6 @@ Usage:
 from waflib import Configure, Logs, Options, Utils
 import os
 
-DEPTH = ''
-
-def depth_push(path):
-	global DEPTH
-
-	DEPTH = os.path.join(DEPTH, path)
-	# print DEPTH
-
-def depth_pop():
-	global DEPTH
-
-	DEPTH = os.path.dirname(DEPTH)
-	# print DEPTH
-
-def get_name_by_depth():
-	global DEPTH
-
-	return DEPTH.replace(os.sep, '_')
-
 def opt(f):
 	"""
 	Decorator: attach new option functions to :py:class:`waflib.Options.OptionsContext`.
@@ -55,18 +36,17 @@ def add_subproject(ctx, names):
 	names_lst = Utils.to_list(names)
 
 	for name in names_lst:
-		depth_push(name)
-
-		wscript_path = os.path.join(DEPTH, 'wscript')
+		if not os.path.isabs(name):
+			# absolute paths only
+			wscript_path = os.path.join(ctx.path.abspath(), name, 'wscript')
+		else: wscript_path = os.path.join(name, 'wscript')
 
 		if not os.path.isfile(wscript_path):
 			# HACKHACK: this way we get warning message right in the help
 			# so this just becomes more noticeable
-			ctx.add_option_group('Cannot find wscript in ' + name + '. You probably missed submodule update')
+			ctx.add_option_group('Cannot find wscript in ' + wscript_path + '. You probably missed submodule update')
 		else:
 			ctx.recurse(name)
-
-		depth_pop()
 
 def options(opt):
 	grp = opt.add_option_group('Subproject options')
@@ -95,38 +75,71 @@ def get_subproject_env(ctx, path, log=False):
 	raise IndexError('top env')
 
 @Configure.conf
-def add_subproject(ctx, names):
-	names_lst = Utils.to_list(names)
-
+def add_subproject(ctx, dirs, prepend = None):
+	'''
+	Recurse into subproject directory
+	
+	:param dirs: Directories we recurse into
+	:type dirs: array or string
+	:param prepend: Prepend virtual path, useful when managing projects with different environments
+	:type prepend: string
+	
+	'''
 	if isinstance(ctx, Configure.ConfigurationContext):
 		if not ctx.env.IGNORED_SUBDIRS and ctx.options.SKIP_SUBDIRS:
 			ctx.env.IGNORED_SUBDIRS = ctx.options.SKIP_SUBDIRS.split(',')
 
-		for name in names_lst:
-			depth_push(name)
-			if name in ctx.env.IGNORED_SUBDIRS:
-				ctx.msg(msg='--X %s' % DEPTH, result='ignored', color='YELLOW')
-				depth_pop()
+		for prj in Utils.to_list(dirs):
+			if ctx.env.SUBPROJECT_PATH:
+				subprj_path = list(ctx.env.SUBPROJECT_PATH)
+			else:
+				subprj_path = ['']
+
+			if prj in ctx.env.IGNORED_SUBDIRS:
+				ctx.msg(msg='--X %s' % '/'.join(subprj_path), result='ignored', color='YELLOW')
 				continue
+			
+			if prepend:
+				subprj_path.append(prepend)
+			
+			subprj_path.append(prj)
+			
 			saveenv = ctx.env
-			ctx.setenv(get_name_by_depth(), ctx.env) # derive new env from previous
-			ctx.env.ENVNAME = name
-			ctx.msg(msg='--> %s' % DEPTH, result='in progress', color='BLUE')
-			ctx.recurse(name)
-			ctx.msg(msg='<-- %s' % DEPTH, result='done', color='BLUE')
+			
+			ctx.setenv('_'.join(subprj_path), ctx.env) # derive new env from previous
+			
+			ctx.env.ENVNAME = prj
+			ctx.env.SUBPROJECT_PATH = list(subprj_path)
+			
+			ctx.msg(msg='--> %s' % '/'.join(subprj_path), result='in progress', color='BLUE')
+			ctx.recurse(prj)
+			ctx.msg(msg='<-- %s' % '/'.join(subprj_path), result='done', color='BLUE')
+			
 			ctx.setenv('') # save env changes
+			
 			ctx.env = saveenv # but use previous
-			depth_pop()
 	else:
 		if not ctx.all_envs:
 			ctx.load_envs()
-		for name in names_lst:
-			depth_push(name)
-			if name in ctx.env.IGNORED_SUBDIRS:
-				depth_pop()
+
+		for prj in Utils.to_list(dirs):
+			if prj in ctx.env.IGNORED_SUBDIRS:
 				continue
+
+			if ctx.env.SUBPROJECT_PATH:
+				subprj_path = list(ctx.env.SUBPROJECT_PATH)
+			else:
+				subprj_path = ['']
+			
+			if prepend:
+				subprj_path.append(prepend)
+			
+			subprj_path.append(prj)
 			saveenv = ctx.env
-			ctx.env = ctx.all_envs[get_name_by_depth()]
-			ctx.recurse(name)
+			try:
+				ctx.env = ctx.all_envs['_'.join(subprj_path)]
+			except:
+				ctx.fatal('Can\'t find env cache %s' % '_'.join(subprj_path))
+			
+			ctx.recurse(prj)
 			ctx.env = saveenv
-			depth_pop()
