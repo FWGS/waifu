@@ -51,11 +51,7 @@ def get_flags_by_type(flags, type, compiler):
 def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 	conf.msg('Detecting supported flags for %s' % (compiler), '...')
 
-	check_flags = required_flags
-
-	if compiler != 'msvc':
-		check_flags += ['-Werror']
-
+	check_flags = required_flags + (['-Werror'] if compiler != 'msvc' else [])
 	supported_flags = []
 
 	for f in flags:
@@ -64,7 +60,7 @@ def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 		fun = getattr(conf, 'check_' + checkfunc)
 
 		try:
-			fun(conf, **{ checkarg: [f] + check_flags})
+			fun(conf, **{ checkarg: [f] + check_flags })
 		except conf.errors.ConfigurationError:
 			conf.end_msg('no', color='YELLOW')
 		else:
