@@ -48,7 +48,7 @@ def get_flags_by_type(flags, type, compiler):
 	return out
 
 @Configure.conf
-def filter_flags(conf, flags, required_flags = [], checkfunc, checkarg, compiler):
+def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 	conf.msg('Detecting supported flags for %s' % (compiler), '...')
 
 	check_flags = required_flags
