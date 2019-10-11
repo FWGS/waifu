@@ -62,13 +62,14 @@ def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 		conf.start_msg('Checking for %s' % f)
 
 		f = getattr(conf, 'check_' + checkfunc)
-		success = f(conf, **{ checkarg: [f] + check_flags, 'mandatory': False })
 
-		if success:
+		try:
+			f(conf, **{ checkarg: [f] + check_flags})
+		except conf.errors.ConfigurationError:
+			conf.end_msg('no', color='YELLOW')
+		else:
 			conf.end_msg('yes')
 			supported_flags.append(f)
-		else:
-			conf.end_msg('no', color='YELLOW')
 
 	return supported_flags
 
