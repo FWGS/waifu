@@ -2,7 +2,7 @@
 # encoding: utf-8
 # a1batross, 2019
 
-TESTS = 'subdirs gitversion conan msdev'
+TESTS = 'subdirs gitversion conan msdev filter_cflags'
 
 def options(opt):
 	opt.add_subproject(TESTS)

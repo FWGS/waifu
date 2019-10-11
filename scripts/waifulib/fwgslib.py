@@ -47,6 +47,39 @@ def get_flags_by_type(flags, type, compiler):
 		out += get_flags_by_compiler(flags[type], compiler)
 	return out
 
+@Configure.conf
+def filter_flags(conf, flags, required_flags = [], checkfunc, checkarg, compiler):
+	conf.msg('Detecting supported flags for %s' % (compiler), '...')
+
+	check_flags = required_flags
+
+	if compiler != 'msvc':
+		check_flags += ['-Werror']
+
+	supported_flags = []
+
+	for f in flags:
+		conf.start_msg('Checking for %s' % f)
+
+		f = getattr(conf, checkfunc)
+		success = f(conf, **{ checkarg: [f] + check_flags, 'mandatory': False })
+
+		if success:
+			conf.end_msg('yes')
+			supported_flags.append(f)
+		else:
+			conf.end_msg('no', color='YELLOW')
+
+	return supported_flags
+
+@Configure.conf
+def filter_cflags(conf, flags, required_flags = []):
+	return conf.filter_flags(flags, required_flags, 'cc', 'cflags', conf.env.COMPILER_CC)
+
+@Configure.conf
+def filter_cxxflags(conf, flags, required_flags = []):
+	return conf.filter_flags(flags, required_flags, 'cxx', 'cxxflags', conf.env.COMPILER_CXX)
+
 def conf_get_flags_by_compiler(unused, flags, compiler):
 	return get_flags_by_compiler(flags, compiler)
 
