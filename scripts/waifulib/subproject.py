@@ -19,7 +19,7 @@ Usage:
 '''
 
 from waflib import Configure, Logs, Options, Utils
-import os
+import os, sys
 
 def opt(f):
 	"""
@@ -31,6 +31,27 @@ def opt(f):
 	setattr(Options.OptionsContext, f.__name__, f)
 	return f
 
+def get_waifulib_by_path(path):
+	if not os.path.isabs(path):
+		path = os.path.abspath(path)
+	
+	waifulib = os.path.join(path, 'scripts', 'waifulib')
+	if os.path.isdir(waifulib):
+		return waifulib
+	return None
+
+def check_and_add_waifulib(path):
+	waifulib = get_waifulib_by_path(path)
+	
+	if waifulib:
+		sys.path.insert(0, waifulib)
+
+def remove_waifulib(path):
+	waifulib = get_waifulib_by_path(path)
+	
+	if waifulib:
+		sys.path.remove(waifulib)
+
 @opt
 def add_subproject(ctx, names):
 	names_lst = Utils.to_list(names)
@@ -38,15 +59,19 @@ def add_subproject(ctx, names):
 	for name in names_lst:
 		if not os.path.isabs(name):
 			# absolute paths only
-			wscript_path = os.path.join(ctx.path.abspath(), name, 'wscript')
-		else: wscript_path = os.path.join(name, 'wscript')
+			wscript_dir = os.path.join(ctx.path.abspath(), name)
+		else: wscript_dir = name
+		
+		wscript_path = os.path.join(wscript_dir, 'wscript')
 
 		if not os.path.isfile(wscript_path):
 			# HACKHACK: this way we get warning message right in the help
 			# so this just becomes more noticeable
 			ctx.add_option_group('Cannot find wscript in ' + wscript_path + '. You probably missed submodule update')
 		else:
+			check_and_add_waifulib(wscript_dir)
 			ctx.recurse(name)
+			remove_waifulib(wscript_dir)
 
 def options(opt):
 	grp = opt.add_option_group('Subproject options')
@@ -93,7 +118,7 @@ def add_subproject(ctx, dirs, prepend = None):
 			if ctx.env.SUBPROJECT_PATH:
 				subprj_path = list(ctx.env.SUBPROJECT_PATH)
 			else:
-				subprj_path = ['']
+				subprj_path = []
 
 			if prj in ctx.env.IGNORED_SUBDIRS:
 				ctx.msg(msg='--X %s' % '/'.join(subprj_path), result='ignored', color='YELLOW')
@@ -112,7 +137,9 @@ def add_subproject(ctx, dirs, prepend = None):
 			ctx.env.SUBPROJECT_PATH = list(subprj_path)
 			
 			ctx.msg(msg='--> %s' % '/'.join(subprj_path), result='in progress', color='BLUE')
+			check_and_add_waifulib(os.path.join(ctx.path.abspath(), prj))
 			ctx.recurse(prj)
+			remove_waifulib(os.path.join(ctx.path.abspath(), prj))
 			ctx.msg(msg='<-- %s' % '/'.join(subprj_path), result='done', color='BLUE')
 			
 			ctx.setenv('') # save env changes
@@ -129,7 +156,7 @@ def add_subproject(ctx, dirs, prepend = None):
 			if ctx.env.SUBPROJECT_PATH:
 				subprj_path = list(ctx.env.SUBPROJECT_PATH)
 			else:
-				subprj_path = ['']
+				subprj_path = []
 			
 			if prepend:
 				subprj_path.append(prepend)
@@ -141,5 +168,7 @@ def add_subproject(ctx, dirs, prepend = None):
 			except:
 				ctx.fatal('Can\'t find env cache %s' % '_'.join(subprj_path))
 			
+			check_and_add_waifulib(os.path.join(ctx.path.abspath(), prj))
 			ctx.recurse(prj)
+			remove_waifulib(os.path.join(ctx.path.abspath(), prj))
 			ctx.env = saveenv
