@@ -3,7 +3,7 @@
 # a1batross, 2019
 
 def options(opt):
-	pass
+	opt.load('compiler_c compiler_cxx')
 
 def configure(conf):
 	conf.load('compiler_c compiler_cxx')
