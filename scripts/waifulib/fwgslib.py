@@ -61,7 +61,7 @@ def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 	for f in flags:
 		conf.start_msg('Checking for %s' % f)
 
-		f = getattr(conf, checkfunc)
+		f = getattr(conf, 'check_' + checkfunc)
 		success = f(conf, **{ checkarg: [f] + check_flags, 'mandatory': False })
 
 		if success:
