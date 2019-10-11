@@ -12,6 +12,7 @@ python:
   - "2.7" # python2 never dies
   - "3.4" # latest version that supports WinXP
   - "3.7" # latest stable
+cache: pip
 env:
   - TYPE="ext"
   - TYPE="noext"
