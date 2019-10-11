@@ -61,10 +61,10 @@ def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
 	for f in flags:
 		conf.start_msg('Checking for %s' % f)
 
-		f = getattr(conf, 'check_' + checkfunc)
+		fun = getattr(conf, 'check_' + checkfunc)
 
 		try:
-			f(conf, **{ checkarg: [f] + check_flags})
+			fun(conf, **{ checkarg: [f] + check_flags})
 		except conf.errors.ConfigurationError:
 			conf.end_msg('no', color='YELLOW')
 		else:
