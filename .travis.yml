@@ -19,6 +19,8 @@ jobs:
         apt:
           packages:
             - build-essential
+      install:
+        - echo meow # do not run pip
       script:
         - bash run-tests.sh $TYPE
     - stage: deploy
@@ -26,6 +28,8 @@ jobs:
       dist: xenial
       python: "3.8"
       env: TYPE="ext"
+      install:
+        - echo meow # do not run pip
       script:
         - bash build-waf.sh
       after_script:
