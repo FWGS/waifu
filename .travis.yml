@@ -22,9 +22,9 @@ jobs:
         script:
           - bash run-tests.sh $TYPE
     - stage: deploy
-       os: linux
-       dist: xenial
-       script:
-         - bash build-waf.sh
-       after_script:
-         - bash scripts/continious-upload.sh waf-ext waf-noext
+      os: linux
+      dist: xenial
+      script:
+        - bash build-waf.sh
+      after_script:
+        - bash scripts/continious-upload.sh waf-ext waf-noext
