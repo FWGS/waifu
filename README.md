@@ -1,5 +1,7 @@
 # Waifu Build System
 
+[![Build Status](https://api.travis-ci.com/FWGS/waifu.svg?branch=master)](https://travis-ci.com/FWGS/waifu) 
+
 This is a Waf build system with some experimental modules developed for FWGS projects.
 
 This repo is focused on developing our own modules, testing them, syncing with upstream and maybe sending back patches to original Waf in future.

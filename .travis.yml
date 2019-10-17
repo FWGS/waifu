@@ -32,4 +32,4 @@ jobs:
       script:
         - bash build-waf.sh
       after_script:
-        - bash scripts/continious-upload.sh waf-ext waf-noext
+        - bash scripts/continious_upload.sh waf-ext waf-noext
