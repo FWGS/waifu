@@ -48,30 +48,27 @@ def get_flags_by_type(flags, type, compiler):
 	return out
 
 @Configure.conf
-def filter_flags(conf, flags, required_flags, checkfunc, checkarg, compiler):
-	conf.msg('Detecting supported flags for %s' % (compiler), '...')
-
+def filter_flags(conf, flags, required_flags, features, checkarg, compiler):
+	
 	check_flags = required_flags + (['-Werror'] if compiler != 'msvc' else [])
-	supported_flags = []
-
-	for f in flags:
-		conf.start_msg('Checking for %s' % f)
-
-		fun = getattr(conf, 'check_' + checkfunc)
-
-		try:
-			fun(conf, **{ checkarg: [f] + check_flags })
-		except conf.errors.ConfigurationError:
-			conf.end_msg('no', color='YELLOW')
-		else:
-			conf.end_msg('yes')
-			supported_flags.append(f)
-
+	tests = map(lambda x: {
+		'features': features,
+		'compiler' : compiler,
+		'msg': '... ' + x,
+		'define_name': Utils.quote_define_name(x),
+		checkarg: [x] + check_flags }, flags )
+	
+	conf.env.stash()
+	conf.multicheck(*tests,
+		msg = 'Checking supported flags for %s in parallel' % compiler,
+		mandatory = False)
+	supported_flags = [ f for f in flags if conf.env[Utils.quote_define_name(f)] ]
+	conf.env.revert()
 	return supported_flags
 
 @Configure.conf
 def filter_cflags(conf, flags, required_flags = []):
-	return conf.filter_flags(flags, required_flags, 'cc', 'cflags', conf.env.COMPILER_CC)
+	return conf.filter_flags(flags, required_flags, 'c', 'cflags', conf.env.COMPILER_CC)
 
 @Configure.conf
 def filter_cxxflags(conf, flags, required_flags = []):
