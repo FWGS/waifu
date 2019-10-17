@@ -9,20 +9,19 @@ python:
 env:
   - TYPE="ext"
   - TYPE="noext"
+os: linux
+dist: xenial
+cache: pip
+addons:
+  apt:
+    packages:
+      - build-essential
+install:
+  - echo meow # do not run pip
+script:
+  - bash run-tests.sh $TYPE
 jobs:
   include:
-    - stage: test
-      os: linux
-      dist: xenial
-      cache: pip
-      addons:
-        apt:
-          packages:
-            - build-essential
-      install:
-        - echo meow # do not run pip
-      script:
-        - bash run-tests.sh $TYPE
     - stage: deploy
       os: linux
       dist: xenial
