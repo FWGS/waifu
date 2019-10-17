@@ -2,28 +2,30 @@ language: python
 git:
   depth: 50
   submodules: true
+python:
+  - "2.7" # python2 never dies
+  - "3.4" # latest version that supports WinXP
+  - "3.8" # latest stable
+env:
+  - TYPE="ext"
+  - TYPE="noext"
 jobs:
   include:
     - stage: test
+      os: linux
+      dist: xenial
+      cache: pip
       addons:
         apt:
           packages:
             - build-essential
-      os: linux
-      dist: xenial
-      python:
-        - "2.7" # python2 never dies
-        - "3.4" # latest version that supports WinXP
-        - "3.8" # latest stable
-      cache: pip
-      env:
-        - TYPE="ext"
-        - TYPE="noext"
       script:
         - bash run-tests.sh $TYPE
     - stage: deploy
       os: linux
       dist: xenial
+      python: "3.8"
+      env: TYPE="ext"
       script:
         - bash build-waf.sh
       after_script:
