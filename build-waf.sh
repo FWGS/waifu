@@ -5,7 +5,7 @@ PRELUDE=$'\tsys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__fi
 
 # a set of relatively stable tools
 # TODO: make it possible to override this list
-WAIFU_TOOLS="gitversion,reconfigure,msdev,fwgslib,cxx11,force_32bit,subproject"
+WAIFU_TOOLS="gitversion,reconfigure,msdev,fwgslib,cxx11,force_32bit,subproject,strip_on_install,sdl2,msvcfix"
 
 pushd wafsrc
 echo "-- Building waf without waifu extensions: $TOOLS"
