@@ -9,7 +9,7 @@ WAIFU_TOOLS="gitversion,reconfigure,msdev,fwgslib,cxx11,force_32bit,subproject,s
 
 pushd wafsrc
 echo "-- Building waf without waifu extensions: $TOOLS"
-./waf-light "--tools=$TOOLS" "--prelude=$PRELUDE"
+./waf-light "--tools=$TOOLS" "--prelude=$PRELUDE" "--set-name=waifu"
 mv waf ../waf-noext
 popd
 
@@ -27,6 +27,6 @@ get_waifu_tools()
 TOOLS=$TOOLS$(get_waifu_tools)
 echo "-- Building waf with waifu extensions: $TOOLS"
 pushd wafsrc
-./waf-light "--tools=$TOOLS" "--prelude=$PRELUDE"
+./waf-light "--tools=$TOOLS" "--prelude=$PRELUDE" "--set-name=waifu"
 mv waf ../waf-ext
 popd
