@@ -25,22 +25,43 @@ modern_cpp_flags = {
 	'default': ['-std=c++11']
 }
 
+CXX11_LAMBDA_FRAGMENT='''
+class T
+{
+	static void M(){}
+public:
+	void t()
+	{
+		auto l = []()
+		{
+			T::M();
+		};
+	}
+};
+
+int main()
+{
+	T t;
+	t.t();
+}
+'''
+
 @Configure.conf
 def check_cxx11(ctx, *k, **kw):
 	if not 'msg' in kw:
 		kw['msg'] = 'Checking if \'%s\' supports C++11' % ctx.env.COMPILER_CXX
-	
+
 	if not 'mandatory' in kw:
 		kw['mandatory'] = False
-	
+
 	# not best way, but this check
 	# was written for exactly mainui_cpp,
 	# where lambdas are mandatory
-	return ctx.check_cxx(fragment='int main( void ){ auto pfnLambda = [](){}; return 0;}', *k, **kw)
+	return ctx.check_cxx(fragment=CXX11_LAMBDA_FRAGMENT, *k, **kw)
 
 def configure(conf):
-	flags = get_flags_by_compiler(modern_cpp_flags, conf.env.COMPILER_CXX)	
-	
+	flags = get_flags_by_compiler(modern_cpp_flags, conf.env.COMPILER_CXX)
+
 	if conf.check_cxx11():
 		conf.env.HAVE_CXX11 = True
 	elif len(flags) != 0 and conf.check_cxx11(msg='...trying with additional flags', cxxflags = flags):
@@ -48,7 +69,6 @@ def configure(conf):
 		conf.env.CXXFLAGS += flags
 	else:
 		conf.env.HAVE_CXX11 = False
-		
+
 		if conf.env.CXX11_MANDATORY:
 			conf.fatal('C++11 support not available!')
-
