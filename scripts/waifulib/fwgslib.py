@@ -14,7 +14,7 @@
 import os
 from waflib import Utils, Errors, Configure, Build
 
-def get_flags_by_compiler(flags, compiler):
+def get_flags_by_compiler(flags, compiler, major_version=None):
 	'''Returns a list of compile flags, depending on compiler
 
 	:param flags: compiler flags
@@ -25,12 +25,21 @@ def get_flags_by_compiler(flags, compiler):
 	'''
 	out = []
 	if compiler in flags:
-		out += flags[compiler]
+		f = flags[compiler]
+		if type(f) is list:
+			out += f
+		elif type(f) is dict:
+			if major_version in f:
+				out += f[major_version]
+			elif 'default' in flags:
+				out += f['default']
+		else:
+			raise TypeError('unknown type, expected list or dict, got %s' % type(f))
 	elif 'default' in flags:
 		out += flags['default']
 	return out
 
-def get_flags_by_type(flags, type, compiler):
+def get_flags_by_type(flags, type, compiler, major_version=None):
 	'''Returns a list of compile flags, depending on compiler and build type
 
 	:param flags: compiler flags
@@ -42,9 +51,9 @@ def get_flags_by_type(flags, type, compiler):
 	'''
 	out = []
 	if 'common' in flags:
-		out += get_flags_by_compiler(flags['common'], compiler)
+		out += get_flags_by_compiler(flags['common'], compiler, major_version)
 	if type in flags:
-		out += get_flags_by_compiler(flags[type], compiler)
+		out += get_flags_by_compiler(flags[type], compiler, major_version)
 	return out
 
 @Configure.conf
@@ -74,19 +83,17 @@ def filter_cflags(conf, flags, required_flags = []):
 def filter_cxxflags(conf, flags, required_flags = []):
 	return conf.filter_flags(flags, required_flags, 'cxx', 'cxxflags', conf.env.COMPILER_CXX)
 
-def conf_get_flags_by_compiler(unused, flags, compiler):
-	return get_flags_by_compiler(flags, compiler)
+def conf_get_flags_by_compiler(unused, flags, compiler, major_version=None):
+	return get_flags_by_compiler(flags, compiler, major_version)
 
 setattr(Configure.ConfigurationContext, 'get_flags_by_compiler', conf_get_flags_by_compiler)
 setattr(Build.BuildContext, 'get_flags_by_compiler', conf_get_flags_by_compiler)
 
-def conf_get_flags_by_type(unused, flags, type, compiler):
-	return get_flags_by_type(flags, type, compiler)
+def conf_get_flags_by_type(unused, flags, type, compiler, major_version=None):
+	return get_flags_by_type(flags, type, compiler, major_version)
 
 setattr(Configure.ConfigurationContext, 'get_flags_by_type', conf_get_flags_by_type)
 setattr(Build.BuildContext, 'get_flags_by_type', conf_get_flags_by_type)
-
-
 
 def get_deps(bld, target):
 	'''Returns a list of (nested) targets on which this target depends.
