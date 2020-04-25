@@ -633,14 +633,17 @@ class MsDevProject(MsDev):
 					dirs.append(uselib_path)
 				pass
 			else:
-				if self.type in (MsDev.STLIB, MsDev.SHLIB):
+				if self.type in (MsDev.STLIB, MsDev.SHLIB, MsDev.PROGRAM):
 					directory = '%s\\msdev' % tgen.path.get_bld().path_from(gen.path)
 					if directory not in dirs:
 						dirs.append(directory.replace('/', '\\'))
-				elif self.type in (MsDev.PROGRAM):
-					for directory in tgen.lib_paths:
-						if directory not in dirs:
-							dirs.append(directory.replace('/', '\\'))
+#				elif self.type in (MsDev.PROGRAM):
+#					try:
+#						for directory in tgen.lib_paths:
+#							if directory not in dirs:
+#								dirs.append(directory.replace('/', '\\'))
+#					except AttributeError:
+#						pass
 		return dirs
 
 	def get_include_files(self, bld, gen):
