@@ -11,23 +11,37 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
+import subprocess
+from waflib import Configure, Logs
 
-def get_git_version():
+@Configure.conf
+def get_git_version(conf):
 	# try grab the current version number from git
-	version = None
-	if os.path.exists('.git'):
-		try:
-			version = os.popen('git describe --dirty --always').read().strip()
-		except Exception as e:
-			pass
+	node = conf.path.find_node('.git')
+	
+	if not node:
+		return None
+	
+	try:
+		stdout = conf.cmd_and_log([conf.env.GIT[0], 'describe', '--dirty', '--always'],
+			cwd = node.parent)
+		version = stdout.strip()
+	except Exception as e:
+		version = ''
+		Logs.debug(str(e))
 
-		if(len(version) == 0):
-			version = None
+	if len(version) == 0:
+		version = None
 
 	return version
 
 def configure(conf):
-	conf.start_msg('Checking git hash')
-	conf.env.GIT_VERSION = get_git_version()
-	conf.end_msg(conf.env.GIT_VERSION if conf.env.GIT_VERSION else 'no')
+	if conf.find_program('git', mandatory = False):	
+		conf.start_msg('Checking git hash')
+		ver = conf.get_git_version()
+
+		if ver:
+			conf.env.GIT_VERSION = ver
+			conf.end_msg(conf.env.GIT_VERSION)
+		else:
+			conf.end_msg('no', color='YELLOW')

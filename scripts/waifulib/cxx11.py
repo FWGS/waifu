@@ -13,40 +13,62 @@
 
 try: from fwgslib import get_flags_by_compiler
 except: from waflib.extras.fwgslib import get_flags_by_compiler
+from waflib import Configure
 
 # Input:
 #   CXX11_MANDATORY(optional) -- fail if C++11 not available
 # Output:
-#   HAVE_CXX11 -- true if C++11 available, otherwise else
+#   HAVE_CXX11 -- true if C++11 available, otherwise false
 
-def check_cxx11(ctx, msg):
-	try:
-		# not best way, but this check
-		# was written for exactly mainui_cpp,
-		# where lambdas are mandatory
-		ctx.check_cxx(
-			fragment='int main( void ){ auto pfnLambda = [](){}; return 0;}',
-			msg	= msg)
-	except ctx.errors.ConfigurationError:
-		return False
-	return True
+modern_cpp_flags = {
+	'msvc':    [],
+	'default': ['-std=c++11']
+}
+
+CXX11_LAMBDA_FRAGMENT='''
+class T
+{
+	static void M(){}
+public:
+	void t()
+	{
+		auto l = []()
+		{
+			T::M();
+		};
+	}
+};
+
+int main()
+{
+	T t;
+	t.t();
+}
+'''
+
+@Configure.conf
+def check_cxx11(ctx, *k, **kw):
+	if not 'msg' in kw:
+		kw['msg'] = 'Checking if \'%s\' supports C++11' % ctx.env.COMPILER_CXX
+
+	if not 'mandatory' in kw:
+		kw['mandatory'] = False
+
+	# not best way, but this check
+	# was written for exactly mainui_cpp,
+	# where lambdas are mandatory
+	return ctx.check_cxx(fragment=CXX11_LAMBDA_FRAGMENT, *k, **kw)
 
 def configure(conf):
-	conf.env.HAVE_CXX11 = True # predict state
-	if not check_cxx11(conf, 'Checking if \'{0}\' supports C++11'.format(conf.env.COMPILER_CC)):
-		modern_cpp_flags = {
-			'msvc':    [],
-			'default': ['-std=c++11']
-		}
-		flags = get_flags_by_compiler(modern_cpp_flags, conf.env.COMPILER_CC)
-		if(len(flags) == 0):
-			conf.env.HAVE_CXX11 = False
-		else:
-			env_stash = conf.env
-			conf.env.append_unique('CXXFLAGS', flags)
-			if not check_cxx11(conf, '...trying with additional flags'):
-				conf.env.HAVE_CXX11 = False
-				conf.env = env_stash
-	if getattr(conf.env, 'CXX11_MANDATORY'):
-		conf.fatal('C++11 support not available!')
+	flags = get_flags_by_compiler(modern_cpp_flags, conf.env.COMPILER_CXX)
 
+	if conf.check_cxx11():
+		conf.env.HAVE_CXX11 = True
+	elif len(flags) != 0 and conf.check_cxx11(msg='...trying with additional flags', cxxflags = flags):
+		conf.env.HAVE_CXX11 = True
+		conf.env.CXXFLAGS += flags
+	else:
+		conf.env.HAVE_CXX11 = False
+
+		if conf.env.CXX11_MANDATORY:
+			conf.fatal('C++11 support not available!')

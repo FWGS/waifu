@@ -13,44 +13,35 @@
 
 try: from fwgslib import get_flags_by_compiler
 except: from waflib.extras.fwgslib import get_flags_by_compiler
+from waflib import Configure
 
 # Input:
 #   BIT32_MANDATORY(optional) -- fail if 32bit mode not available
-#   BIT32_ALLOW64(optional)   -- ignore all checks, just set DEST_SIZEOF_VOID_P to 8
 # Output:
 #   DEST_SIZEOF_VOID_P -- an integer, equals sizeof(void*) on target
 
-def check_32bit(ctx, msg):
-	try:
-		ctx.check_cc(
-			fragment='''int main( void )
-			{
-				int check[sizeof(void*) == 4 ? 1: -1];
-				return 0;
-			}''',
-			msg	= msg)
-	except ctx.errors.ConfigurationError:
-		return False
-	return True
+@Configure.conf
+def check_32bit(ctx, *k, **kw):
+	if not 'msg' in kw:
+		kw['msg'] = 'Checking if \'%s\' can target 32-bit' % ctx.env.COMPILER_CC
+	
+	if not 'mandatory' in kw:
+		kw['mandatory'] = False
+	
+	return ctx.check_cc( fragment='int main(void){int check[sizeof(void*)==4?1:-1];return 0;}', *k, **kw)
 
 def configure(conf):
-	if check_32bit(conf, 'Checking if \'{0}\' can target 32-bit'.format(conf.env.COMPILER_CC)):
+	flags = ['-m32'] if not conf.env.DEST_OS == 'darwin' else ['-arch', 'i386']
+	
+	if conf.check_32bit():
+		conf.env.DEST_SIZEOF_VOID_P = 4
+	elif conf.env.BIT32_MANDATORY and conf.check_32bit(msg = '...trying with additional flags', cflags = flags, linkflags = flags):
+		conf.env.LINKFLAGS += flags
+		conf.env.CXXFLAGS += flags
+		conf.env.CFLAGS += flags
 		conf.env.DEST_SIZEOF_VOID_P = 4
 	else:
 		conf.env.DEST_SIZEOF_VOID_P = 8
-		if not conf.env.BIT32_ALLOW64:
-			flags = ['-m32']
-			# Think different.
-			if(conf.env.DEST_OS == 'darwin'):
-				flags = ['-arch', 'i386']
-			env_stash = conf.env
-			conf.env.append_value('LINKFLAGS', flags)
-			conf.env.append_value('CFLAGS',    flags)
-			conf.env.append_value('CXXFLAGS',  flags)
-			if check_32bit(conf, '...trying with additional flags'):
-				conf.env.DEST_SIZEOF_VOID_P = 4
-			else:
-				conf.env.DEST_SIZEOF_VOID_P = 8
-			conf.env = env_stash
-			if conf.env.BIT32_MANDATORY and conf.env.DEST_SIZEOF_VOID_P == 8:
-				conf.fatal('Compiler can\'t create 32-bit code!')
+		
+		if conf.env.BIT32_MANDATORY:
+			conf.fatal('Compiler can\'t create 32-bit code!')

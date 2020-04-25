@@ -1,0 +1,35 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# a1batross, 2019
+
+def options(opt):
+	opt.load('compiler_c compiler_cxx')
+
+def configure(conf):
+	conf.load('compiler_c compiler_cxx')
+
+	c_only_flags = [
+		'-Wall', # let's guess this flag always exist
+		'-Wsomething-that-does-not-exist'
+	]
+
+	cxx_only_flags = [
+		'-std=c++11', # let's guess this flag always exist only for C++ compiler
+	]
+
+	filtered_cflags = conf.filter_cflags(c_only_flags)
+
+	if '-Wall' not in filtered_cflags:
+		conf.fatal('TEST FAILED')
+
+	if '-Wsomething-that-does-not-exist' in filtered_cflags:
+		conf.fatal('TEST FAILED')
+
+	if '-std=c++11' in conf.filter_cflags(cxx_only_flags):
+		conf.fatal('TEST FAILED')
+
+	if '-std=c++11' not in conf.filter_cxxflags(cxx_only_flags):
+		conf.fatal('TEST FAILED')
+
+def build(bld):
+	pass

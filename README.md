@@ -1,8 +1,10 @@
 # Waifu Build System
 
-This is a Waf build system with some experimental modules developed for FWGS projects.
+[![Build Status](https://api.travis-ci.com/FWGS/waifu.svg?branch=master)](https://travis-ci.com/FWGS/waifu) 
 
-This repo is focused on developing our own modules, testing them, syncing with upstream and maybe sending back patches to original Waf in future.
+This is a Waf build system with experimental tools developed for FWGS projects.
+
+This repo is focused on developing our own tools, testing them, syncing with upstream and maybe sending back patches to original Waf in future.
 
 ## Build
 
@@ -20,9 +22,12 @@ If it succeded, then tests are not failed.
 
 ## Using in your project
 
-There is two prebuilt waf binaries, to those who don't want build by themselves.
-1) `waf-ext` as a prebuilt waf binary with some of our modules
-2) `waf-noext` as a prebuilt vanilla waf binary, only with line of code, to preload waifulib
+`build-waf.sh` creates two waf binaries.
+1) `waf-ext` as a prebuilt waf binary with stable tools.
+2) `waf-noext` as a prebuilt vanilla waf binary, only with waifulib preloader.
 
-Then you need to create `scripts/waifulib` folder where you will place `waf` binary.
+They published to [GitHub Releases](https://github.com/FWGS/waifu/releases/) as well.
+
+You may need to create `scripts/waifulib` folder where you will place `waf` binary.
 Depending on your needs, copy modules from our `scripts/waifulib` folder to yours.
+

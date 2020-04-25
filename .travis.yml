@@ -2,18 +2,34 @@ language: python
 git:
   depth: 50
   submodules: true
+python:
+  - "2.7" # python2 never dies
+  - "3.4" # latest version that supports WinXP
+  - "3.8" # latest stable
+env:
+  - TYPE="ext"
+  - TYPE="noext"
+os: linux
+dist: xenial
+cache: pip
 addons:
   apt:
     packages:
       - build-essential
-os: linux
-dist: xenial
-python:
-  - "2.7" # python2 never dies
-  - "3.4" # latest version that supports WinXP
-  - "3.7" # latest stable
-env:
-  - TYPE="ext"
-  - TYPE="noext"
+install:
+  - echo meow # do not run pip
 script:
   - bash run-tests.sh $TYPE
+jobs:
+  include:
+    - stage: deploy
+      os: linux
+      dist: xenial
+      python: "3.8"
+      env: TYPE="ext"
+      install:
+        - echo meow # do not run pip
+      script:
+        - bash build-waf.sh
+      after_script:
+        - bash scripts/continious_upload.sh waf-ext waf-noext
