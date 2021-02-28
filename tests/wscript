@@ -2,7 +2,13 @@
 # encoding: utf-8
 # a1batross, 2019
 
-TESTS = 'waifuversion subdirs gitversion conan msdev filter_cflags enforce_pic'
+import sys
+
+TESTS = 'waifuversion subdirs gitversion msdev filter_cflags enforce_pic'
+
+# Conan has dropped support for Python 2 and 3.4
+if sys.hexversion >= 0x03050000:
+	TESTS += ' conan'
 
 def options(opt):
 	opt.add_subproject(TESTS)

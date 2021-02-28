@@ -5,7 +5,8 @@ git:
 python:
   - "2.7" # python2 never dies
   - "3.4" # latest version that supports WinXP
-  - "3.8" # latest stable
+  - "3.8"
+  - "3.9"
 env:
   - TYPE="ext"
   - TYPE="noext"
@@ -25,7 +26,7 @@ jobs:
     - stage: deploy
       os: linux
       dist: xenial
-      python: "3.8"
+      python: "3.9"
       env: TYPE="ext"
       install:
         - echo meow # do not run pip
