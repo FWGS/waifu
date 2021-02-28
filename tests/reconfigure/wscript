@@ -14,7 +14,7 @@ def configure(conf):
 	conf.load('reconfigure')
 
 	if not getattr(conf.options, 'TEST_OPTION', False):
-		raise Exception('TEST FAILED')
+		conf.fatal('TEST FAILED')
 
 def build(bld):
 	pass

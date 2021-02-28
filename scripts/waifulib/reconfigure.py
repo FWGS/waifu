@@ -19,29 +19,27 @@ Usage:
 
 from waflib import Configure, Logs, Options, Utils, ConfigSet
 import os
-
 import optparse
-STORE_PATH = 'build/configuration.py'
 
 def options(opt):
 	opt.add_option('--rebuild-cache', dest='rebuild_cache', default=False, action='store_true', help='load previous configuration')
 	opt.add_option('--reconfigure', dest='reconfigure', default=False, action='store_true', help='load and update configuration')
 
 def configure(conf):
+	store_path = os.path.join(conf.bldnode.abspath(), 'configuration.py')
 	store_data = ConfigSet.ConfigSet()
 	options = vars(conf.options)
 	environ = conf.environ
 	if conf.options.reconfigure or conf.options.rebuild_cache:
-		store_data.load(STORE_PATH)
+		store_data.load(store_path)
 		if conf.options.reconfigure:
 			for o in options:
 				if options[o]: store_data['OPTIONS'][o] = options[o]
 			store_data['ENVIRON'].update(environ)
-			store_data.store(STORE_PATH)
+			store_data.store(store_path)
 		conf.environ = store_data['ENVIRON']
 		conf.options = optparse.Values(store_data['OPTIONS'])
 	else:
 	    store_data['OPTIONS'] = vars(conf.options)
 	    store_data['ENVIRON'] = conf.environ
-	    store_data.store(STORE_PATH)
-	    
+	    store_data.store(store_path)
