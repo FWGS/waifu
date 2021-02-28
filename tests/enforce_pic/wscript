@@ -1,0 +1,24 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# a1batross, 2019
+
+from waflib import Context
+
+def options(opt):
+	opt.load('enforce_pic')
+
+def configure(conf):
+	if conf.env.DEST_OS == 'win32':
+		return
+
+	conf.load('compiler_c compiler_cxx enforce_pic')
+	conf.check_pic(True)
+	if not ('-fPIC' in conf.env.CFLAGS_cstlib and '-fPIC' in conf.env.CXXFLAGS_cxxstlib):
+		conf.fatal('TEST 1 FAILED')
+
+	conf.check_pic(False)
+	if '-fPIC' in (conf.env.CFLAGS_cstlib + conf.env.CXXFLAGS_cxxstlib + conf.env.CFLAGS_cshlib + conf.env.CXXFLAGS_cxxshlib + conf.env.CFLAGS_MACBUNDLE + conf.env.CXXFLAGS_MACBUNDLE):
+		conf.fatal('TEST 2 FAILED')
+
+def build(bld):
+	pass
