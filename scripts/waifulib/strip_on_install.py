@@ -18,23 +18,28 @@ def options(opt):
 		help='strip debug information to file *.debug. Implies --strip. You must pass this flag to install command [default: %default]')
 
 def configure(conf):
-	if conf.env.DEST_BINFMT in ['elf', 'mac-o']:
-		conf.find_program('strip', var='STRIP')
-		if not conf.env.STRIPFLAGS:
-			conf.env.STRIPFLAGS = os.environ['STRIPFLAGS'] if 'STRIPFLAGS' in os.environ else []
-		
-		# a1ba: I am lazy to add `export OBJCOPY=` everywhere in my scripts
-		# so just try to deduce which objcopy we have
-		try:
-			k = conf.env.STRIP[0].rfind('-')
-			if k >= 0:
-				objcopy_name = conf.env.STRIP[0][:k] + '-objcopy'
-				try: conf.find_program(objcopy_name, var='OBJCOPY')
-				except: conf.find_program('objcopy', var='OBJCOPY')
-			else:
-				conf.find_program('objcopy', var='OBJCOPY')
-		except:
-			conf.find_program('objcopy', var='OBJCOPY')
+	if conf.env.DEST_BINFMT not in ['elf', 'mac-o']:
+		return
+
+	if not conf.env.STRIPFLAGS:
+		conf.env.STRIPFLAGS = os.environ['STRIPFLAGS'] if 'STRIPFLAGS' in os.environ else []
+
+	try: conf.find_program('strip', var='STRIP')
+	except:
+		Logs.warn('Couldn\'t find strip, --strip install option will be unavailable!')
+		return
+
+	# a1ba: I am lazy to add `export OBJCOPY=` everywhere in my scripts
+	# so just try to deduce which objcopy we have
+	k = conf.env.STRIP[0].rfind('-')
+	if k >= 0:
+		objcopy_name = conf.env.STRIP[0][:k] + '-objcopy'
+		try: conf.find_program(objcopy_name, var='OBJCOPY')
+		except: pass
+
+	if 'OBJCOPY' not in conf.env:
+		try: conf.find_program('objcopy', var='OBJCOPY')
+		except: Logs.warn('Couldn\'t find objcopy, --strip-to-file will be unavailable!')
 
 def copy_fun(self, src, tgt):
 	inst_copy_fun(self, src, tgt)
@@ -59,13 +64,13 @@ def copy_fun(self, src, tgt):
 				self.generator.bld.cmd_and_log(ocopy_cmd, output=Context.BOTH, quiet=Context.BOTH)
 				if not self.generator.bld.progress_bar:
 					Logs.info('%s+ objcopy --only-keep-debug %s%s%s %s%s%s', c1, c4, tgt, c1, c3, tgt_debug, c1)
-			
+
 			self.generator.bld.cmd_and_log(strip_cmd, output=Context.BOTH, quiet=Context.BOTH)
 			if not self.generator.bld.progress_bar:
 				f1 = os.path.getsize(src)
 				f2 = os.path.getsize(tgt)
 				Logs.info('%s+ strip %s%s%s (%d bytes change)', c1, c2, tgt, c1, f2 - f1)
-				
+
 			if self.generator.bld.options.strip_to_file:
 				self.generator.bld.cmd_and_log(ocopy_debuglink_cmd, output=Context.BOTH, quiet=Context.BOTH)
 				if not self.generator.bld.progress_bar:
