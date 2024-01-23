@@ -9,11 +9,14 @@ PTHREAD_CHECK = '''
 #include <pthread.h>
 
 static void* fun(void* params) {
+    (void)params;
     return NULL;
 }
 
-int main() {
+int main(int argc, char **argv) {
     pthread_t thread;
+    (void)argc;
+    (void)argv;
     pthread_create(&thread, NULL, &fun, NULL);
     pthread_join(thread, NULL);
 }
