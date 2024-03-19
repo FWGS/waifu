@@ -1,8 +1,13 @@
 #!/bin/bash
 
+if [ -z $1 ]; then
+	echo "$0: <ext|noext>"
+	exit 1
+fi
+
 die()
 {
-	cat $1/config.log
+#	cat $1/config.log
 	exit 1
 }
 
