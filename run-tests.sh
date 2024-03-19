@@ -14,13 +14,6 @@ die()
 # build waf
 ./build-waf.sh
 
-# disable conan for python < 3.4
-if python -c 'import sys; exit(sys.hexversion < 0x03050000)'; then
-	# install conan
-	pip install pip --upgrade
-	pip install conan
-fi
-
 # run tests
 python waf-$1 configure build msdev clean || die build
 
