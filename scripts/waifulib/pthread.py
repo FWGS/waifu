@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     (void)argv;
     pthread_create(&thread, NULL, &fun, NULL);
     pthread_join(thread, NULL);
+    return 0;
 }
 '''
 
