@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TOOLS="msvs,clang_compilation_database,color_msvc,msvc_pdb,gccdeps,msvcdeps"
-PRELUDE=$'\tContext.WAIFUVERSION=\'1.1.0\'\n\tsys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), \'scripts\', \'waifulib\'))'
+PRELUDE=$'\tContext.WAIFUVERSION=\'1.2.0\'\n\tsys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), \'scripts\', \'waifulib\'))'
 
 # a set of relatively stable tools
 # TODO: make it possible to override this list
