@@ -12,9 +12,9 @@ from waflib import Build, Utils, Context, Errors, Logs
 def options(opt):
 	grp = opt.option_groups['Installation and uninstallation options']
 	grp.add_option('--strip', dest='strip', action='store_true', default=False,
-		help='strip binaries. You must pass this flag to install command [default: %default]')
+		help='strip binaries. You must pass this flag to install command [default: %(default)s]')
 	grp.add_option('--strip-to-file', dest='strip_to_file', action='store_true', default=False,
-		help='strip debug information to file *.debug. Implies --strip. You must pass this flag to install command [default: %default]')
+		help='strip debug information to file *.debug. Implies --strip. You must pass this flag to install command [default: %(default)s]')
 
 def configure(conf):
 	if conf.env.DEST_BINFMT not in ['elf', 'mac-o']:
