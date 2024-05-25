@@ -10,10 +10,9 @@ import shutil, os
 from waflib import Build, Utils, Context, Errors, Logs
 
 def options(opt):
-	grp = opt.option_groups['install/uninstall options']
+	grp = opt.option_groups['Installation and uninstallation options']
 	grp.add_option('--strip', dest='strip', action='store_true', default=False,
 		help='strip binaries. You must pass this flag to install command [default: %default]')
-	
 	grp.add_option('--strip-to-file', dest='strip_to_file', action='store_true', default=False,
 		help='strip debug information to file *.debug. Implies --strip. You must pass this flag to install command [default: %default]')
 
