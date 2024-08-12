@@ -30,9 +30,7 @@ def my_dirname(path):
 def sdl2_configure_path(conf, path):
 	conf.env.HAVE_SDL2 = 1
 	if conf.env.DEST_OS == 'darwin':
-		conf.env.INCLUDES_SDL2 = [
-			os.path.abspath(os.path.join(path, 'Headers'))
-		]
+		conf.env.INCLUDES_SDL2 = [os.path.abspath(os.path.join(path, 'Headers'))]
 		conf.env.FRAMEWORKPATH_SDL2 = [my_dirname(path)]
 		conf.env.FRAMEWORK_SDL2 = ['SDL2']
 	else:
@@ -54,6 +52,10 @@ def configure(conf):
 		conf.start_msg('Configuring SDL2 by provided path')
 		sdl2_configure_path(conf, conf.options.SDL2_PATH)
 		conf.end_msg('yes: {0}, {1}, {2}'.format(conf.env.LIB_SDL2, conf.env.LIBPATH_SDL2, conf.env.INCLUDES_SDL2))
+	elif conf.env.DEST_OS == 'darwin':
+		conf.start_msg('Expecting SDL2.framework in /Library/Frameworks/')
+		sdl2_configure_path(conf, '/Library/Frameworks/SDL2.framework')
+		conf.end_msg('ok')
 	else:
 		try:
 			conf.check_cfg(package='sdl2', args='--cflags --libs',
