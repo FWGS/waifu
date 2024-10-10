@@ -5,7 +5,7 @@ PRELUDE=$'\tfrom waflib import Context\n\tContext.WAIFUVERSION=\'1.3.0\'\n\tsys.
 
 # a set of relatively stable tools
 # TODO: make it possible to override this list
-WAIFU_TOOLS="gitversion,reconfigure,msdev,fwgslib,cxx11,force_32bit,subproject,strip_on_install,sdl2,enforce_pic"
+WAIFU_TOOLS="gitversion,reconfigure,msdev,fwgslib,cxx11,force_32bit,subproject,strip_on_install,enforce_pic"
 
 pushd wafsrc
 echo "-- Building waf without waifu extensions: $TOOLS"
