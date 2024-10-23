@@ -15,8 +15,6 @@ try: from fwgslib import get_flags_by_compiler
 except: from waflib.extras.fwgslib import get_flags_by_compiler
 from waflib import Configure
 
-# Input:
-#   BIT32_MANDATORY(optional) -- fail if 32bit mode not available
 # Output:
 #   DEST_SIZEOF_VOID_P -- an integer, equals sizeof(void*) on target
 
@@ -24,24 +22,24 @@ from waflib import Configure
 def check_32bit(ctx, *k, **kw):
 	if not 'msg' in kw:
 		kw['msg'] = 'Checking if \'%s\' can target 32-bit' % ctx.env.COMPILER_CC
-	
+
 	if not 'mandatory' in kw:
 		kw['mandatory'] = False
-	
+
 	return ctx.check_cc( fragment='int main(void){int check[sizeof(void*)==4?1:-1];return 0;}', *k, **kw)
 
-def configure(conf):
+@Configure.conf
+def force_32bit(conf, mandatory = True):
 	flags = ['-m32'] if not conf.env.DEST_OS == 'darwin' else ['-arch', 'i386']
-	
+
 	if conf.check_32bit():
 		conf.env.DEST_SIZEOF_VOID_P = 4
-	elif conf.env.BIT32_MANDATORY and conf.check_32bit(msg = '...trying with additional flags', cflags = flags, linkflags = flags):
+	elif mandatory and conf.check_32bit(msg = '...trying with additional flags', cflags = flags, linkflags = flags):
 		conf.env.LINKFLAGS += flags
 		conf.env.CXXFLAGS += flags
 		conf.env.CFLAGS += flags
 		conf.env.DEST_SIZEOF_VOID_P = 4
 	else:
 		conf.env.DEST_SIZEOF_VOID_P = 8
-		
-		if conf.env.BIT32_MANDATORY:
+		if mandatory:
 			conf.fatal('Compiler can\'t create 32-bit code!')
