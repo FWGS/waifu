@@ -15,60 +15,129 @@ try: from fwgslib import get_flags_by_compiler
 except: from waflib.extras.fwgslib import get_flags_by_compiler
 from waflib import Configure
 
-# Input:
-#   CXX11_MANDATORY(optional) -- fail if C++11 not available
-# Output:
-#   HAVE_CXX11 -- true if C++11 available, otherwise false
-
-modern_cpp_flags = {
-	'msvc':    [],
-	'default': ['-std=c++11']
+cxx_flags = {
+	'cxx11': {
+		'msvc'   : [],
+		'default': ['-std=c++11'],
+	},
+	'cxx14': {
+		'msvc'   : ['/std:c++14'],
+		'default': ['-std=c++14'],
+	},
+	'cxx17': {
+		'msvc'   : ['/std:c++17'],
+		'default': ['-std=c++17'],
+	},
+	'cxx20': {
+		'msvc'   : ['/std:c++20'],
+		'default': ['-std=c++20'],
+	},
+	'cxx23': {
+		'msvc'   : ['/std:c++latest'], # not supported in MSVC as of 2024
+		'default': ['-std=c++23'],
+	},
 }
 
-CXX11_LAMBDA_FRAGMENT='''
-class T
-{
-	static void M(){}
-public:
-	void t()
-	{
-		auto l = []()
-		{
-			T::M();
-		};
-	}
-};
+cxx_macros = {
+	'cxx11': '201103L',
+	'cxx14': '201402L',
+	'cxx17': '201703L',
+	'cxx20': '202002L',
+	'cxx23': '202302L',
+}
 
-int main()
+CPLUSPLUS_FRAGMENT='''
+#if __cplusplus < %s
+#error "not supported"
+#endif
+
+int main(int argc, char **argv)
 {
-	T t;
-	t.t();
+	(void)argc;
+	(void)argv;
+	return 0;
+}
+'''
+
+c_flags = {
+	'c11': {
+		'msvc'   : ['/std:c11'],
+		'default': ['-std=c11'],
+	},
+	'c17': {
+		'msvc'   : ['/std:c17'],
+		'default': ['-std=c11'],
+	},
+	'c23': {
+		'msvc'   : ['/std:clatest'], # not supported in MSVC as of 2024?
+		'default': ['-std=c11'],
+	},
+}
+
+c_macros = {
+	'c11': '201112L',
+	'c17': '201710L',
+	'c23': '202311L',
+}
+
+STDC_FRAGMENT='''
+#if __STDC_VERSION__ < %s
+#error "not supported"
+#endif
+
+int main(int argc, char **argv)
+{
+	(void)argc;
+	(void)argv;
+	return 0;
 }
 '''
 
 @Configure.conf
-def check_cxx11(ctx, *k, **kw):
-	if not 'msg' in kw:
-		kw['msg'] = 'Checking if \'%s\' supports C++11' % ctx.env.COMPILER_CXX
+def check_cxx11(ctx, msg, fragment, is_cxx, flags = None, *k, **kw):
+	kw['mandatory'] = False
+	kw['msg'] = msg
+	kw['fragment'] = fragment
 
-	if not 'mandatory' in kw:
-		kw['mandatory'] = False
+	if flags:
+		kw['cxxflags' if is_cxx else 'cflags'] = flags
 
-	# not best way, but this check
-	# was written for exactly mainui_cpp,
-	# where lambdas are mandatory
-	return ctx.check_cxx(fragment=CXX11_LAMBDA_FRAGMENT, *k, **kw)
+	if is_cxx:
+		return ctx.check_cxx(*k, **kw)
 
-def configure(conf):
-	flags = get_flags_by_compiler(modern_cpp_flags, conf.env.COMPILER_CXX)
+	return ctx.check_cc(*k, **kw)
 
-	if conf.check_cxx11():
-		conf.env.HAVE_CXX11 = True
-	elif len(flags) != 0 and conf.check_cxx11(msg='...trying with additional flags', cxxflags = flags):
-		conf.env.HAVE_CXX11 = True
-		conf.env.CXXFLAGS += flags
+@Configure.conf
+def check_std(conf, version, mandatory = False):
+	if version.startswith('c++'):
+		version.replace('c++', 'cxx')
+
+	textversion = version.replace('cxx', 'c++').upper()
+
+	if version not in cxx_flags and version not in c_flags:
+		if mandatory:
+			conf.fatal('%s support not available' % textversion)
+		return False
+
+	is_cxx = version.startswith('cxx')
+
+	if is_cxx:
+		msg = 'Checking if \'%s\' supports %s' % (conf.env.COMPILER_CXX, textversion)
+		flags = get_flags_by_compiler(cxx_flags[version], conf.env.COMPILER_CXX)
+		frag = CPLUSPLUS_FRAGMENT % cxx_macros[version]
 	else:
-		conf.env.HAVE_CXX11 = False
+		msg = 'Checking if \'%s\' supports %s' % (conf.env.COMPILER_C, textversion)
+		flags = get_flags_by_compiler(c_flags[version], conf.env.COMPILER_C)
+		frag = STDC_FRAGMENT % c_macros[version]
 
-		if conf.env.CXX11_MANDATORY:
-			conf.fatal('C++11 support not available!')
+	if conf.check_cxx11(msg, frag, is_cxx):
+		return True
+
+	if len(flags) != 0 and conf.check_cxx11('...trying with additional flags', frag, is_cxx, flags):
+		conf.env['CXXFLAGS' if is_cxx else 'CFLAGS'] += flags
+		return True
+
+	if mandatory:
+		conf.fatal('%s support not available!', textversion)
+
+	return False
