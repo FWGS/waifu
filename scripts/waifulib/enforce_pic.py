@@ -17,19 +17,18 @@ from waflib.Configure import conf
 def check_pic(conf, enable):
 	if enable:
 		# Every static library must have fPIC
-		if conf.env.DEST_OS != 'win32' and '-fPIC' in conf.env.CFLAGS_cshlib:
+		if '-fPIC' in conf.env.CFLAGS_cshlib:
 			conf.env.append_unique('CFLAGS_cstlib', '-fPIC')
 			conf.env.append_unique('CXXFLAGS_cxxstlib', '-fPIC')
 	else:
-		if '-fPIC' in conf.env.CFLAGS_cstlib:
-			conf.env.CFLAGS_cstlib.remove('-fPIC')
-		if '-fPIC' in conf.env.CFLAGS_cshlib:
-			conf.env.CFLAGS_cshlib.remove('-fPIC')
-		if '-fPIC' in conf.env.CXXFLAGS_cxxshlib:
-			conf.env.CXXFLAGS_cxxshlib.remove('-fPIC')
-		if '-fPIC' in conf.env.CXXFLAGS_cxxstlib:
-			conf.env.CXXFLAGS_cxxstlib.remove('-fPIC')
-		if '-fPIC' in conf.env.CFLAGS_MACBUNDLE:
-			conf.env.CFLAGS_MACBUNDLE.remove('-fPIC')
-		if '-fPIC' in conf.env.CXXFLAGS_MACBUNDLE:
-			conf.env.CXXFLAGS_MACBUNDLE.remove('-fPIC')
+		vars = ['CFLAGS_cstlib',
+			'CFLAGS_cshlib',
+			'CXXFLAGS_cxxshlib',
+			'CXXFLAGS_cxxstlib',
+			'CFLAGS_MACBUNDLE',
+			'CXXFLAGS_MACBUNDLE',]
+
+		for i in vars:
+			if '-fPIC' in conf.env[i]:
+				conf.env[i].remove('-fPIC')
+			conf.env.append_unique(i, '-fno-PIC')
