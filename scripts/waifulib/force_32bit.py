@@ -18,28 +18,42 @@ from waflib import Configure
 # Output:
 #   DEST_SIZEOF_VOID_P -- an integer, equals sizeof(void*) on target
 
+DEST_CPU_64_TO_32 = {
+'x86_64'  : 'x86',
+'amd64'   : 'x86',
+'aarch64' : 'thumb',
+}
+
 @Configure.conf
 def check_32bit(ctx, *k, **kw):
 	if not 'msg' in kw:
-		kw['msg'] = 'Checking if \'%s\' can target 32-bit' % ctx.env.COMPILER_CC
+		kw['msg'] = 'Checking if \'%s\' generates 32-bit code' % ctx.env.COMPILER_CC
 
 	if not 'mandatory' in kw:
 		kw['mandatory'] = False
 
-	return ctx.check_cc( fragment='int main(void){int check[sizeof(void*)==4?1:-1];return 0;}', *k, **kw)
+	return ctx.check_cc(fragment='int main(void){int check[sizeof(void*)==4?1:-1];return 0;}', *k, **kw)
 
 @Configure.conf
-def force_32bit(conf, mandatory = True):
-	flags = ['-m32'] if not conf.env.DEST_OS == 'darwin' else ['-arch', 'i386']
+def force_32bit(ctx, set_dest_cpu = True):
+	# no work to do
+	if ctx.env.DEST_SIZEOF_VOID_P == 4:
+		return
 
-	if conf.check_32bit():
-		conf.env.DEST_SIZEOF_VOID_P = 4
-	elif mandatory and conf.check_32bit(msg = '...trying with additional flags', cflags = flags, linkflags = flags):
-		conf.env.LINKFLAGS += flags
-		conf.env.CXXFLAGS += flags
-		conf.env.CFLAGS += flags
-		conf.env.DEST_SIZEOF_VOID_P = 4
+	msg = 'Configuring \'%s\' to generate 32-bit code' % ctx.env.COMPILER_CC
+	flags = ['-m32'] if not ctx.env.DEST_OS == 'darwin' else ['-arch', 'i386']
+
+	if ctx.check_32bit(msg=msg, cflags=flags, linkflags=flags):
+		ctx.env.LINKFLAGS += flags
+		ctx.env.CXXFLAGS += flags
+		ctx.env.CFLAGS += flags
+		ctx.env.DEST_SIZEOF_VOID_P = 4
+
+		if set_dest_cpu and ctx.env.DEST_CPU in DEST_CPU_64_TO_32:
+			ctx.env.DEST_CPU = DEST_CPU_64_TO_32[ctx.env.DEST_CPU]
+			ctx.msg('New target CPU', ctx.env.DEST_CPU)
 	else:
-		conf.env.DEST_SIZEOF_VOID_P = 8
-		if mandatory:
-			conf.fatal('Compiler can\'t create 32-bit code!')
+		ctx.fatal('Compiler can\'t create 32-bit code!')
+
+def configure(ctx):
+	ctx.env.DEST_SIZEOF_VOID_P = 4 if ctx.check_32bit() else 8
